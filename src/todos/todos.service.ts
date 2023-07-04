@@ -63,7 +63,7 @@ export class TodosService {
         await this.repository.createQueryBuilder()
         .update(Todo)
         .set({id: () => 'id + 1'})
-        .where('id >= :id', {id: previousTodo.id})
+        .where('id > :id', {id: previousTodo.id})
         .execute();
         
         await this.repository.createQueryBuilder()
