@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthCredentialDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
@@ -18,25 +18,31 @@ export class UserService {
         const existUser = await this.repository.findOneBy({email})
 
         if(!existUser) {
-            const user = new User();
-            user.email = email;
-            await user.save();
+            throw new NotFoundException('Email not found')
         }
 
         const payload = {email};
         const accessToken = await this.jwtService.signAsync(payload);
 
         return {accessToken};
+    }
+    
+    async createUser(authCredentialDto: AuthCredentialDto) {
+        try {
+            const { email } = authCredentialDto;
+            const user = new User();
+            user.email = email;
 
-        // try {
-        // } catch (error) {
-        //     if(error.code === 'ER_DUP_ENTRY') {
-        //         throw new ConflictException('User already exist')
-        //     }
+            await user.save();
 
-        //     throw new InternalServerErrorException();
-        // }
+        } catch (error) {
+            console.log(error)
+            if(error.code === 'ER_DUP_ENTRY') {
+                throw new ConflictException('User already exist')
+            }
 
-        // const jwt = await this.jwtService.sign()
+            throw new InternalServerErrorException();
+        }
+
     }
 }
