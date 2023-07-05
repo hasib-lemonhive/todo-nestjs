@@ -12,7 +12,7 @@ export class UserController {
 
     @Post('/create-user')
     async createUser(@Headers() authCredential: AuthCredentialDto) {
-        await this.userService.createUser(authCredential);
+        // await this.userService.createUser(authCredential.email);
         return {
             message: 'User created successfully'
         };

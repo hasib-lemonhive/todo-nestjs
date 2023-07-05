@@ -1,3 +1,7 @@
+import { Field, ObjectType, InputType} from 'type-graphql'
+
+@InputType()
 export class AuthCredentialDto {
-    email: string;
+    @Field()
+    readonly email: string;
 }

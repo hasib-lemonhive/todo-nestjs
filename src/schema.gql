@@ -1,0 +1,28 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Todo {
+  id: ID!
+  content: String!
+  user: User!
+  userId: Int!
+}
+
+type User {
+  id: Float!
+  email: String!
+  todos: [Todo!]!
+}
+
+type Query {
+  sayHello: String!
+}
+
+type Mutation {
+  createUser(data: CreateUserInput!): User!
+}
+
+input CreateUserInput {
+  email: String!
+}
