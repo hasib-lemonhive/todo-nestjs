@@ -1,7 +1,7 @@
 import { Field, ObjectType} from 'type-graphql'
 
 @ObjectType()
-export class AuthCredentialDto {
+export class CreateUserInput {
     @Field()
     readonly email: string;
 }

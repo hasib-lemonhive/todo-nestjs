@@ -4,12 +4,19 @@ import { UserModule } from 'src/user/user.module';
 import { TodosModule } from 'src/todos/todos.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from 'src/config/typeorm.config';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: 'schema.gql'
+    }),
     UserModule,
-    TodosModule],
+    // TodosModule
+  ],
   providers: [AppService],
 })
 export class AppModule {}

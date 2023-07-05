@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt-strategy';
+import { UserResolver } from './user.resolver';
 
 @Module({
   imports: [
@@ -20,8 +21,8 @@ import { JwtStrategy } from './jwt-strategy';
   }), 
   TypeOrmModule.forFeature([User])
 ],
-  providers: [UserService, JwtStrategy],
-  controllers: [UserController],
+  providers: [UserService, JwtStrategy, UserResolver],
+  // controllers: [UserController], TODO: delete controller when resolver implemented
   exports: [JwtStrategy, PassportModule]
 })
 export class UserModule {}

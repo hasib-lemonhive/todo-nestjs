@@ -10,6 +10,6 @@ export class User extends BaseEntity {
   @Column()
   email: string;
 
-  @OneToMany(type => Todo, todo => todo.user, {eager: true})
+  @OneToMany(() => Todo, todo => todo.user, {eager: true})
   todos: Todo[];
 }

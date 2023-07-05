@@ -4,13 +4,14 @@ import { AuthCredentialDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
+import { CreateUserInput } from './input/create-user.input';
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(User)
-        private repository: Repository<User>,
-        private jwtService: JwtService
+        private readonly repository: Repository<User>,
+        private readonly jwtService: JwtService
     ) {}
     
     async getAuthenticated(authCredentialDto: AuthCredentialDto) {
@@ -27,16 +28,14 @@ export class UserService {
         return {accessToken};
     }
     
-    async createUser(authCredentialDto: AuthCredentialDto) {
+    async createUser(email: string) {
         try {
-            const { email } = authCredentialDto;
             const user = new User();
             user.email = email;
 
-            await user.save();
+            return user.save();
 
         } catch (error) {
-            console.log(error)
             if(error.code === 'ER_DUP_ENTRY') {
                 throw new ConflictException('User already exist')
             }
