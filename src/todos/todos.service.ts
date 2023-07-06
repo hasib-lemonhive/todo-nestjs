@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Todo } from './todo.entity';
 import { User } from 'src/user/user.entity';
 import { UpdateTodoOrderDto } from './dto/update-todo-order.dto';
+import { CreateTodoInput } from './dto/create-todo.input';
+import { UpdateTodoInput } from './dto/update-todo.input';
 
 @Injectable()
 export class TodosService {
@@ -12,19 +14,17 @@ export class TodosService {
         private repository: Repository<Todo>
     ) {}
 
-    async getMyTodos(user: User) {
-        const query = this.repository.createQueryBuilder('todo');
-        query.where('todo.userId = :userId', {userId: user.id});
-
-        return await query.getMany();
+    async getMyTodos(user: User): Promise<Todo[]> {
+        return this.repository.find({where: {userId: user.id}});
     }
 
-    async getAllTodos() {
-        const query = this.repository.createQueryBuilder('todo');
-        return await query.getMany();
+    async getAllTodos(): Promise<Todo[]> {
+        return this.repository.find();
     }
 
-    async createTodo(content: string, user: User) {
+    async createTodo(createTodoInput: CreateTodoInput, user: User): Promise<Todo> {
+        const { content } = createTodoInput;
+
         const todo = new Todo();
         todo.content = content;
         todo.user = user;
@@ -35,8 +35,9 @@ export class TodosService {
         return todo;
     }
 
-    async updateTodo(id: string, content: string, user: User) {
-        const foundTodo = await this.repository.findOneBy({id: parseInt(id), userId: user.id});
+    async updateTodo(updateTodoInput: UpdateTodoInput, user: User) {
+        const {id, content} = updateTodoInput;
+        const foundTodo = await this.repository.findOneBy({id: id, userId: user.id});
 
         if(!foundTodo) {
             throw new NotFoundException(`No todo found by id:${id}`);
@@ -52,9 +53,6 @@ export class TodosService {
 
         const todoToMove = await this.repository.findOneBy({id: parseInt(id), userId: user.id});
         const previousTodo = await this.repository.findOneBy({id: parseInt(prevTodoId), userId: user.id});
-
-        console.log('todo to move => ', todoToMove)
-        console.log('previous todo => ', previousTodo)
 
         if(!todoToMove || !previousTodo) {
             throw new NotFoundException();

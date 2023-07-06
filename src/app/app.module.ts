@@ -16,7 +16,7 @@ import { join } from 'path';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql')
     }),
     UserModule,
-    // TodosModule
+    TodosModule
   ],
   providers: [AppService],
 })

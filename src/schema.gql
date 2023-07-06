@@ -15,14 +15,36 @@ type User {
   todos: [Todo!]!
 }
 
-type Query {
-  sayHello: String!
+type AccessToken {
+  accessToken: String!
 }
 
-type Mutation {
-  createUser(data: CreateUserInput!): User!
+type GetTodosPayload {
+  id: ID!
+  content: String!
+}
+
+type Query {
+  authenticate(data: CreateUserInput!): AccessToken!
+  getTodos: [GetTodosPayload!]!
+  getMyTodos: [GetTodosPayload!]!
 }
 
 input CreateUserInput {
   email: String!
+}
+
+type Mutation {
+  createUser(data: CreateUserInput!): AccessToken!
+  createTodo(data: CreateTodoInput!): GetTodosPayload!
+  updateTodo(data: UpdateTodoInput!): GetTodosPayload!
+}
+
+input CreateTodoInput {
+  content: String!
+}
+
+input UpdateTodoInput {
+  id: ID!
+  content: String!
 }
