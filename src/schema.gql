@@ -5,6 +5,7 @@
 type Todo {
   id: ID!
   content: String!
+  order: Float!
   user: User!
   userId: Int!
 }
@@ -22,6 +23,7 @@ type AccessToken {
 type GetTodosPayload {
   id: ID!
   content: String!
+  order: Float!
 }
 
 type Query {
@@ -38,6 +40,7 @@ type Mutation {
   createUser(data: CreateUserInput!): AccessToken!
   createTodo(data: CreateTodoInput!): GetTodosPayload!
   updateTodo(data: UpdateTodoInput!): GetTodosPayload!
+  updateTodoOrder(data: UpdateTodoOrderInput!): GetTodosPayload!
 }
 
 input CreateTodoInput {
@@ -47,4 +50,10 @@ input CreateTodoInput {
 input UpdateTodoInput {
   id: ID!
   content: String!
+}
+
+input UpdateTodoOrderInput {
+  id: Int!
+  prevId: Int!
+  nextId: Int!
 }

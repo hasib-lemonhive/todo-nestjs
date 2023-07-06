@@ -8,6 +8,7 @@ import { GqlAuthGuard } from "src/user/guard/gql-auth.guard";
 import { User } from "src/user/user.entity";
 import { CreateTodoInput } from "./dto/create-todo.input";
 import { UpdateTodoInput } from "./dto/update-todo.input";
+import { UpdateTodoOrderInput } from "./dto/update-todo-order.dto";
 
 @Resolver(of => Todo)
 export class TodosResolver {
@@ -27,6 +28,7 @@ export class TodosResolver {
     @Mutation(returns => GetTodosPayload)
     @UseGuards(new GqlAuthGuard())
     createTodo(@Args('data') content: CreateTodoInput, @Context() context): Promise<Todo> {
+      console.log(content)
       return this.todoService.createTodo(content, context.req.user as User)
     }
 
@@ -34,5 +36,13 @@ export class TodosResolver {
     @UseGuards(new GqlAuthGuard())
     updateTodo(@Args('data') updateTodoInput: UpdateTodoInput, @Context() context): Promise<Todo> {
       return this.todoService.updateTodo(updateTodoInput, context.req.user as User)
+    }
+
+    @Mutation(returns => GetTodosPayload)
+    @UseGuards(new GqlAuthGuard())
+    async updateTodoOrder(@Args('data') updateTodoOrderInput: UpdateTodoOrderInput, @Context() context) {
+      console.log(updateTodoOrderInput)
+      await this.todoService.updateTodoOrder(updateTodoOrderInput, context.req.user as User)
+      return {id: "1", content: 'demo', order: 0}
     }
 }

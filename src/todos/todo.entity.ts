@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
+import { ObjectType, Field, ID, Int, Float } from '@nestjs/graphql';
 import { User } from 'src/user/user.entity';
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Generated, BaseEntity } from 'typeorm';
 
@@ -12,6 +12,10 @@ export class Todo extends BaseEntity{
   @Field()
   @Column()
   content: string;
+
+  @Field(type => Float)
+  @Column({type: 'float'})
+  order: number;
 
   @Field(type => User)
   @ManyToOne(type => User, user => user.todos, {eager: false})

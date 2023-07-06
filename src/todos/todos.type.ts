@@ -1,4 +1,4 @@
-import { ObjectType, Field, ID } from "@nestjs/graphql";
+import { ObjectType, Field, ID, Float } from "@nestjs/graphql";
 
 @ObjectType()
 export class GetTodosPayload {
@@ -7,4 +7,7 @@ export class GetTodosPayload {
 
   @Field()
   content: string;
+
+  @Field(type => Float)
+  order: number;
 }
