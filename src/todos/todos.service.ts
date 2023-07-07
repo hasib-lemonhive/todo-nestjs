@@ -15,14 +15,8 @@ export class TodosService {
     ) {}
 
     async getMyTodos(user: User): Promise<Todo[]> {
-        return this.repository.find({where: {userId: user.id}});
+        return this.repository.find({where: {userId: user.id}, order: {order: 'ASC'}});
     }
-    
-    // const largestPrice = await getConnection()
-    // .createQueryBuilder()
-    // .select('MAX(Price)', 'LargestPrice')
-    // .from(Products, 'products')
-    // .getRawOne();
 
     async getAllTodos(): Promise<Todo[]> {
         return this.repository.createQueryBuilder('todo')
@@ -36,10 +30,8 @@ export class TodosService {
         todo.content = content;
         todo.user = user;
 
-        const { maxOrder } = await this.repository
-        .createQueryBuilder('todo')
-        .select('MAX(todo.order)', 'maxOrder')
-        .getRawOne();
+        const maxOrder: number | null = await this.repository
+        .maximum('order', {userId: user.id})
 
         if(maxOrder !== null) {
             todo.order = maxOrder + 1;
@@ -65,10 +57,9 @@ export class TodosService {
         return foundTodo;
     }
 
-    async updateTodoOrder(updateTodoOptions: UpdateTodoOrderInput, user: User) {
+    async updateTodoOrder(updateTodoOptions: UpdateTodoOrderInput, user: User): Promise<Todo> {
         const { id, prevId, nextId} = updateTodoOptions;
-        console.log('type of id => ', typeof id);
-
+ 
         const todoToMove = await this.repository.findOneBy({id, userId: user.id});
         const previousTodo = await this.repository.findOneBy({id: prevId, userId: user.id});
         const nextTodo = await this.repository.findOneBy({id: nextId, userId: user.id});
@@ -78,12 +69,16 @@ export class TodosService {
         }
 
         const getAverage = (previousTodo.order + nextTodo.order) / 2;
-        console.log('get average => ', getAverage)
+        todoToMove.order = getAverage;
 
-        return this.repository.createQueryBuilder()
-        .update(Todo)
-        .set({order: getAverage})
-        .where('id > :id', {id})
-        .execute();
+        await this.repository.update(id, {order: getAverage})
+
+        return todoToMove;
+
+        // repository.createQueryBuilder()
+        // .update(Todo)
+        // .set({order: getAverage})
+        // .where('id = :id', {id})
+        // .execute();
     }
 }

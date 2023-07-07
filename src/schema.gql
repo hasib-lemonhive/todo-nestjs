@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 
 type Todo {
-  id: ID!
+  id: Int!
   content: String!
   order: Float!
   user: User!
@@ -21,7 +21,7 @@ type AccessToken {
 }
 
 type GetTodosPayload {
-  id: ID!
+  id: Int!
   content: String!
   order: Float!
 }
@@ -48,7 +48,7 @@ input CreateTodoInput {
 }
 
 input UpdateTodoInput {
-  id: ID!
+  id: Int!
   content: String!
 }
 

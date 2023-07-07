@@ -28,7 +28,6 @@ export class TodosResolver {
     @Mutation(returns => GetTodosPayload)
     @UseGuards(new GqlAuthGuard())
     createTodo(@Args('data') content: CreateTodoInput, @Context() context): Promise<Todo> {
-      console.log(content)
       return this.todoService.createTodo(content, context.req.user as User)
     }
 
@@ -40,9 +39,7 @@ export class TodosResolver {
 
     @Mutation(returns => GetTodosPayload)
     @UseGuards(new GqlAuthGuard())
-    async updateTodoOrder(@Args('data') updateTodoOrderInput: UpdateTodoOrderInput, @Context() context) {
-      console.log(updateTodoOrderInput)
-      await this.todoService.updateTodoOrder(updateTodoOrderInput, context.req.user as User)
-      return {id: "1", content: 'demo', order: 0}
+    async updateTodoOrder(@Args('data') updateTodoOrderInput: UpdateTodoOrderInput, @Context() context): Promise<Todo> {
+      return this.todoService.updateTodoOrder(updateTodoOrderInput, context.req.user as User)
     }
 }

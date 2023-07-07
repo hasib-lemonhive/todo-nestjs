@@ -1,8 +1,8 @@
-import { ObjectType, Field, ID, Float } from "@nestjs/graphql";
+import { ObjectType, Field, Float, Int } from "@nestjs/graphql";
 
 @ObjectType()
 export class GetTodosPayload {
-  @Field(type => ID)
+  @Field(type => Int)
   id: number;
 
   @Field()

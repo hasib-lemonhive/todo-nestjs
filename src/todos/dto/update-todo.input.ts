@@ -1,9 +1,9 @@
-import { Field, InputType, ID} from '@nestjs/graphql'
+import { Field, InputType, Int} from '@nestjs/graphql'
 import { IsString } from 'class-validator';
 
 @InputType()
 export class UpdateTodoInput {
-    @Field(type => ID)
+    @Field(type => Int)
     readonly id: number;
 
     @Field()
