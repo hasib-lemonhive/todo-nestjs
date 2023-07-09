@@ -1,14 +1,11 @@
 import { ObjectType, Field, Int, Float } from '@nestjs/graphql';
+import { ExtendedBaseEntity } from 'src/shared/base.entities';
 import { User } from 'src/user/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Generated, BaseEntity } from 'typeorm';
+import { Entity, Column, ManyToOne } from 'typeorm';
 
 @Entity()
 @ObjectType('Todo')
-export class Todo extends BaseEntity{
-  @Field(type => Int)
-  @PrimaryGeneratedColumn()
-  id: number;
-
+export class Todo extends ExtendedBaseEntity {
   @Field()
   @Column()
   content: string;

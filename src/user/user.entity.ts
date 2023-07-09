@@ -1,15 +1,12 @@
 import { Todo } from 'src/todos/todo.entity';
-import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany, BaseEntity } from 'typeorm';
+import { Entity, Column, Unique, OneToMany } from 'typeorm';
 import { Field, ObjectType } from '@nestjs/graphql';
+import { ExtendedBaseEntity } from 'src/shared/base.entities';
 
 @Entity()
 @Unique(['email'])
 @ObjectType()
-export class User extends BaseEntity{
-  @PrimaryGeneratedColumn()
-  @Field()
-  id: number;
-
+export class User extends ExtendedBaseEntity {
   @Column()
   @Field()
   email: string;

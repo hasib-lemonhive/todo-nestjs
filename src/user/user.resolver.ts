@@ -1,6 +1,4 @@
-import { Args, Field, Mutation, ObjectType, Query, Resolver } from "@nestjs/graphql";
-// import { UseGuards } from "@nestjs/common";
-// import { GqlAuthGuard } from "./guard/gql-auth.guard";
+import { Args, Mutation, Query, Resolver } from "@nestjs/graphql";
 import { UserService } from "./user.service";
 import { CreateUserInput } from "./dto/create-user.input";
 import { User } from "./user.entity";
@@ -18,5 +16,10 @@ export class UserResolver {
     @Query(returns => AccessToken)
     authenticate(@Args('data') createUserInput: CreateUserInput): Promise<AccessToken> {
       return this.userService.getAuthenticated(createUserInput);
+    }
+
+    @Query(retunrs => [User])
+    getUsers(): Promise<User[]> {
+      return this.userService.getUsers();
     }
 }

@@ -4,14 +4,23 @@
 
 type Todo {
   id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
   content: String!
   order: Float!
   user: User!
   userId: Int!
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type User {
-  id: Float!
+  id: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
   email: String!
   todos: [Todo!]!
 }
@@ -28,6 +37,7 @@ type GetTodosPayload {
 
 type Query {
   authenticate(data: CreateUserInput!): AccessToken!
+  getUsers: [User!]!
   getTodos: [GetTodosPayload!]!
   getMyTodos: [GetTodosPayload!]!
 }

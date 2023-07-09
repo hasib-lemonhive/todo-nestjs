@@ -18,11 +18,6 @@ export class UserService {
         const { email } = getUserEmail;
         const existUser = await this.repository.findOneBy({email})
 
-        // const result = await this.repository
-        // .createQueryBuilder('user')
-        // .select('MAX(user.id)', 'maxId')
-        // .getRawOne();
-
         if(!existUser) {
             throw new NotFoundException('Email not found')
         }
@@ -52,5 +47,9 @@ export class UserService {
             throw new InternalServerErrorException();
         }
 
+    }
+
+    async getUsers(): Promise<User[]> {
+        return this.repository.find();
     }
 }
