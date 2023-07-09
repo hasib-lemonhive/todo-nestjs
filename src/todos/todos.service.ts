@@ -60,7 +60,7 @@ export class TodosService {
     async updateTodoOrder(updateTodoOptions: UpdateTodoOrderInput, user: User): Promise<Todo> {
         const { id, prevId, nextId} = updateTodoOptions;
         
-        if(prevId === null && nextId === null) {
+        if(!prevId && !nextId) {
             throw new NotAcceptableException('prevId and nextId both can\'t be null');
         }
 
@@ -72,56 +72,37 @@ export class TodosService {
 
         let previousTodo: Todo | null, nextTodo: Todo | null;
 
-        previousTodo = prevId !== null ? await this.repository.findOneBy({id: prevId, userId: user.id}) : null;
-        nextTodo = nextId !== null ? await this.repository.findOneBy({id: nextId, userId: user.id}) : null;
+        previousTodo = prevId ? await this.repository.findOneBy({id: prevId, userId: user.id}) : null;
+        nextTodo = nextId ? await this.repository.findOneBy({id: nextId, userId: user.id}) : null;
 
-        if(prevId && previousTodo === null) throw new NotFoundException(`prevId: ${prevId} not found.`);
-        if(nextId && nextTodo === null) throw new NotFoundException(`nextId: ${nextId} not found.`);
+        if(prevId && !previousTodo) throw new NotFoundException(`prevId: ${prevId} not found.`);
+        if(nextId && !nextTodo) throw new NotFoundException(`nextId: ${nextId} not found.`);
 
         // handle most top item order
-        if(nextTodo && previousTodo === null) {
-            // Check if item is already ordered
-            if(todoToMove.order < nextTodo.order) throw new NotAcceptableException('already updated');
-
+        if(nextTodo && !previousTodo) {
             // Check nextTodo is the most top item
             const minOrder: number | null = await this.repository
             .minimum('order', {userId: user.id})
+
             if(minOrder !== nextTodo.order) throw new NotAcceptableException(`nextId: ${nextId} is not the most top item`);
 
-            const todos = await this.repository.find({where: {userId: user.id}, order: {order: 'ASC'}, take: 2});
+            todoToMove.order = nextTodo.order / 2;
 
-            todoToMove.order = { ...nextTodo }.order;
-            const getAverage = (nextTodo.order + todos[1].order) / 2;
-            nextTodo.order = getAverage;
-
-            // await this.repository.upsert([todoToMove, nextTodo], ['id']);
-            await Promise.all([
-                this.repository.update(todoToMove.id, {order: todoToMove.order}),
-                this.repository.update(nextTodo.id, {order: nextTodo.order})
-            ])
+            await this.repository.update(todoToMove.id, todoToMove);
             return todoToMove;
         }
 
         // handle most bottom item order
-        if(nextTodo === null && previousTodo) {
-            // Check if item is already ordered
-            if(todoToMove.order > previousTodo.order) throw new NotAcceptableException('already updated');
-
+        if(!nextTodo && previousTodo) {
             // Check previousTodo is the most bottom item
             const maxOrder: number | null = await this.repository
             .maximum('order', {userId: user.id})
+
             if(maxOrder !== previousTodo.order) throw new NotAcceptableException(`prevId: ${prevId} is not the most bottom item`);
 
-            const todos = await this.repository.find({where: {userId: user.id}, order: {order: 'DESC'}, take: 2});
+            todoToMove.order = previousTodo.order + 100;
 
-            todoToMove.order = {...previousTodo}.order;
-            const getAverage = (previousTodo.order + todos[1].order) / 2;
-            previousTodo.order = getAverage;
-            
-            await Promise.all([
-                this.repository.update(todoToMove.id, {order: todoToMove.order}),
-                this.repository.update(previousTodo.id, {order: previousTodo.order})
-            ])
+            await this.repository.update(todoToMove.id, todoToMove);
             return todoToMove;
         }
 
@@ -129,7 +110,6 @@ export class TodosService {
         todoToMove.order = getAverage;
 
         await this.repository.update(todoToMove.id, {order: getAverage})
-
         return todoToMove;
     }
 }
