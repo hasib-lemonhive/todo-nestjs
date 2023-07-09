@@ -54,6 +54,6 @@ input UpdateTodoInput {
 
 input UpdateTodoOrderInput {
   id: Int!
-  prevId: Int!
-  nextId: Int!
+  prevId: Int
+  nextId: Int
 }

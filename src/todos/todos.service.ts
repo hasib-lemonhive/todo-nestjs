@@ -1,4 +1,4 @@
-import { Get, Injectable, NotFoundException } from '@nestjs/common';
+import { Get, Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Todo } from './todo.entity';
@@ -34,9 +34,9 @@ export class TodosService {
         .maximum('order', {userId: user.id})
 
         if(maxOrder !== null) {
-            todo.order = maxOrder + 1;
+            todo.order = maxOrder + 100;
         } else { 
-            todo.order = 1.0;
+            todo.order = 100;
         }
 
         await todo.save();
@@ -59,26 +59,77 @@ export class TodosService {
 
     async updateTodoOrder(updateTodoOptions: UpdateTodoOrderInput, user: User): Promise<Todo> {
         const { id, prevId, nextId} = updateTodoOptions;
- 
-        const todoToMove = await this.repository.findOneBy({id, userId: user.id});
-        const previousTodo = await this.repository.findOneBy({id: prevId, userId: user.id});
-        const nextTodo = await this.repository.findOneBy({id: nextId, userId: user.id});
+        
+        if(prevId === null && nextId === null) {
+            throw new NotAcceptableException('prevId and nextId both can\'t be null');
+        }
 
-        if(!todoToMove || !todoToMove || !previousTodo) {
-            throw new NotFoundException();
+        const todoToMove = await this.repository.findOneBy({id, userId: user.id});
+        
+        if(!todoToMove) {
+            throw new NotFoundException(`id: ${id} not found.`);
+        }
+
+        let previousTodo: Todo | null, nextTodo: Todo | null;
+
+        previousTodo = prevId !== null ? await this.repository.findOneBy({id: prevId, userId: user.id}) : null;
+        nextTodo = nextId !== null ? await this.repository.findOneBy({id: nextId, userId: user.id}) : null;
+
+        if(prevId && previousTodo === null) throw new NotFoundException(`prevId: ${prevId} not found.`);
+        if(nextId && nextTodo === null) throw new NotFoundException(`nextId: ${nextId} not found.`);
+
+        // handle most top item order
+        if(nextTodo && previousTodo === null) {
+            // Check if item is already ordered
+            if(todoToMove.order < nextTodo.order) throw new NotAcceptableException('already updated');
+
+            // Check nextTodo is the most top item
+            const minOrder: number | null = await this.repository
+            .minimum('order', {userId: user.id})
+            if(minOrder !== nextTodo.order) throw new NotAcceptableException(`nextId: ${nextId} is not the most top item`);
+
+            const todos = await this.repository.find({where: {userId: user.id}, order: {order: 'ASC'}, take: 2});
+
+            todoToMove.order = { ...nextTodo }.order;
+            const getAverage = (nextTodo.order + todos[1].order) / 2;
+            nextTodo.order = getAverage;
+
+            // await this.repository.upsert([todoToMove, nextTodo], ['id']);
+            await Promise.all([
+                this.repository.update(todoToMove.id, {order: todoToMove.order}),
+                this.repository.update(nextTodo.id, {order: nextTodo.order})
+            ])
+            return todoToMove;
+        }
+
+        // handle most bottom item order
+        if(nextTodo === null && previousTodo) {
+            // Check if item is already ordered
+            if(todoToMove.order > previousTodo.order) throw new NotAcceptableException('already updated');
+
+            // Check previousTodo is the most bottom item
+            const maxOrder: number | null = await this.repository
+            .maximum('order', {userId: user.id})
+            if(maxOrder !== previousTodo.order) throw new NotAcceptableException(`prevId: ${prevId} is not the most bottom item`);
+
+            const todos = await this.repository.find({where: {userId: user.id}, order: {order: 'DESC'}, take: 2});
+
+            todoToMove.order = {...previousTodo}.order;
+            const getAverage = (previousTodo.order + todos[1].order) / 2;
+            previousTodo.order = getAverage;
+            
+            await Promise.all([
+                this.repository.update(todoToMove.id, {order: todoToMove.order}),
+                this.repository.update(previousTodo.id, {order: previousTodo.order})
+            ])
+            return todoToMove;
         }
 
         const getAverage = (previousTodo.order + nextTodo.order) / 2;
         todoToMove.order = getAverage;
 
-        await this.repository.update(id, {order: getAverage})
+        await this.repository.update(todoToMove.id, {order: getAverage})
 
         return todoToMove;
-
-        // repository.createQueryBuilder()
-        // .update(Todo)
-        // .set({order: getAverage})
-        // .where('id = :id', {id})
-        // .execute();
     }
 }

@@ -5,9 +5,9 @@ export class UpdateTodoOrderInput {
     @Field(type => Int)
     readonly id: number;
 
-    @Field(type => Int)
-    readonly prevId: number;
+    @Field(type => Int, {nullable: true})
+    readonly prevId?: number;
 
-    @Field(type => Int)
-    readonly nextId: number;
+    @Field(type => Int, {nullable: true})
+    readonly nextId?: number;
 }
