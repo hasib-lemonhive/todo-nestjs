@@ -6,10 +6,11 @@ import { User } from 'src/user/user.entity';
 import { UpdateTodoOrderInput } from './dto/update-todo-order.dto';
 import { CreateTodoInput } from './dto/create-todo.input';
 import { UpdateTodoInput } from './dto/update-todo.input';
+import { DeleteTodoInput } from './dto/delete-doto.input';
 
 @Injectable()
 export class TodosService {
-    constructor(
+  constructor(
         @InjectRepository(Todo) 
         private repository: Repository<Todo>
     ) {}
@@ -57,6 +58,14 @@ export class TodosService {
         return foundTodo;
     }
 
+    async deleteTodo(deleteTodoInput: DeleteTodoInput, user: User) {
+        const { id } = deleteTodoInput;
+        const deleteResult = await this.repository.delete({id, userId: user.id});
+
+        if(deleteResult.affected === 1) return true;
+        return false;
+    }
+
     async updateTodoOrder(updateTodoOptions: UpdateTodoOrderInput, user: User): Promise<Todo> {
         const { id, prevId, nextId} = updateTodoOptions;
         
@@ -70,10 +79,8 @@ export class TodosService {
             throw new NotFoundException(`id: ${id} not found.`);
         }
 
-        let previousTodo: Todo | null, nextTodo: Todo | null;
-
-        previousTodo = prevId ? await this.repository.findOneBy({id: prevId, userId: user.id}) : null;
-        nextTodo = nextId ? await this.repository.findOneBy({id: nextId, userId: user.id}) : null;
+        const previousTodo = prevId ? await this.repository.findOneBy({id: prevId, userId: user.id}) : null;
+        const nextTodo = nextId ? await this.repository.findOneBy({id: nextId, userId: user.id}) : null;
 
         if(prevId && !previousTodo) throw new NotFoundException(`prevId: ${prevId} not found.`);
         if(nextId && !nextTodo) throw new NotFoundException(`nextId: ${nextId} not found.`);

@@ -41,6 +41,7 @@ type Mutation {
   createTodo(data: CreateTodoInput!): GetTodosPayload!
   updateTodo(data: UpdateTodoInput!): GetTodosPayload!
   updateTodoOrder(data: UpdateTodoOrderInput!): GetTodosPayload!
+  deleteTodo(data: DeleteTodoInput!): Boolean!
 }
 
 input CreateTodoInput {
@@ -56,4 +57,8 @@ input UpdateTodoOrderInput {
   id: Int!
   prevId: Int
   nextId: Int
+}
+
+input DeleteTodoInput {
+  id: Int!
 }

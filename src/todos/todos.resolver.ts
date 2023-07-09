@@ -2,13 +2,13 @@ import { Args, Query, Resolver, Context, Mutation } from "@nestjs/graphql";
 import { Todo } from "./todo.entity";
 import { TodosService } from "./todos.service";
 import { GetTodosPayload } from "./todos.type";
-import { Req, UseGuards } from "@nestjs/common";
-import { AuthGuard } from "@nestjs/passport";
+import { UseGuards } from "@nestjs/common";
 import { GqlAuthGuard } from "src/user/guard/gql-auth.guard";
 import { User } from "src/user/user.entity";
 import { CreateTodoInput } from "./dto/create-todo.input";
 import { UpdateTodoInput } from "./dto/update-todo.input";
 import { UpdateTodoOrderInput } from "./dto/update-todo-order.dto";
+import { DeleteTodoInput } from "./dto/delete-doto.input";
 
 @Resolver(of => Todo)
 export class TodosResolver {
@@ -41,5 +41,11 @@ export class TodosResolver {
     @UseGuards(new GqlAuthGuard())
     async updateTodoOrder(@Args('data') updateTodoOrderInput: UpdateTodoOrderInput, @Context() context): Promise<Todo> {
       return this.todoService.updateTodoOrder(updateTodoOrderInput, context.req.user as User)
+    }
+
+    @Mutation(returns => Boolean)
+    @UseGuards(new GqlAuthGuard())
+    deleteTodo(@Args('data') deleteTodoInput: DeleteTodoInput, @Context() context): Promise<boolean> {
+      return this.todoService.deleteTodo(deleteTodoInput, context.req.user as User)
     }
 }
