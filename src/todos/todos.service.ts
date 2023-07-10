@@ -1,42 +1,53 @@
-import { Get, Injectable, NotFoundException } from '@nestjs/common';
+import { Get, Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Todo } from './todo.entity';
 import { User } from 'src/user/user.entity';
-import { UpdateTodoOrderDto } from './dto/update-todo-order.dto';
+import { UpdateTodoOrderInput } from './dto/update-todo-order.dto';
+import { CreateTodoInput } from './dto/create-todo.input';
+import { UpdateTodoInput } from './dto/update-todo.input';
+import { DeleteTodoInput } from './dto/delete-doto.input';
 
 @Injectable()
 export class TodosService {
-    constructor(
+  constructor(
         @InjectRepository(Todo) 
         private repository: Repository<Todo>
     ) {}
 
-    async getMyTodos(user: User) {
-        const query = this.repository.createQueryBuilder('todo');
-        query.where('todo.userId = :userId', {userId: user.id});
-
-        return await query.getMany();
+    async getMyTodos(user: User): Promise<Todo[]> {
+        return this.repository.find({where: {userId: user.id}, order: {order: 'ASC'}});
     }
 
-    async getAllTodos() {
-        const query = this.repository.createQueryBuilder('todo');
-        return await query.getMany();
+    async getAllTodos(): Promise<Todo[]> {
+        return this.repository.createQueryBuilder('todo')
+        .orderBy('todo.order', 'ASC')
+        .getMany();
     }
 
-    async createTodo(content: string, user: User) {
+    async createTodo(createTodoInput: CreateTodoInput, user: User): Promise<Todo> {
+        const { content } = createTodoInput;
         const todo = new Todo();
         todo.content = content;
         todo.user = user;
-        
-        await todo.save();
 
+        const maxOrder: number | null = await this.repository
+        .maximum('order', {userId: user.id})
+
+        if(maxOrder !== null) {
+            todo.order = maxOrder + 100;
+        } else { 
+            todo.order = 100;
+        }
+
+        await todo.save();
         delete todo.user;
         return todo;
     }
 
-    async updateTodo(id: string, content: string, user: User) {
-        const foundTodo = await this.repository.findOneBy({id: parseInt(id), userId: user.id});
+    async updateTodo(updateTodoInput: UpdateTodoInput, user: User) {
+        const {id, content} = updateTodoInput;
+        const foundTodo = await this.repository.findOneBy({id: id, userId: user.id});
 
         if(!foundTodo) {
             throw new NotFoundException(`No todo found by id:${id}`);
@@ -47,29 +58,65 @@ export class TodosService {
         return foundTodo;
     }
 
-    async updateTodoOrder(updateTodoOptions: UpdateTodoOrderDto, user: User) {
-        const { id, prevTodoId} = updateTodoOptions;
+    async deleteTodo(deleteTodoInput: DeleteTodoInput, user: User) {
+        const { id } = deleteTodoInput;
+        const deleteResult = await this.repository.delete({id, userId: user.id});
 
-        const todoToMove = await this.repository.findOneBy({id: parseInt(id), userId: user.id});
-        const previousTodo = await this.repository.findOneBy({id: parseInt(prevTodoId), userId: user.id});
+        if(deleteResult.affected === 1) return true;
+        return false;
+    }
 
-        console.log('todo to move => ', todoToMove)
-        console.log('previous todo => ', previousTodo)
-
-        if(!todoToMove || !previousTodo) {
-            throw new NotFoundException();
+    async updateTodoOrder(updateTodoOptions: UpdateTodoOrderInput, user: User): Promise<Todo> {
+        const { id, prevId, nextId} = updateTodoOptions;
+        
+        if(!prevId && !nextId) {
+            throw new NotAcceptableException('prevId and nextId both can\'t be null');
         }
 
-        await this.repository.createQueryBuilder()
-        .update(Todo)
-        .set({id: () => 'id + 1'})
-        .where('id > :id', {id: previousTodo.id})
-        .execute();
+        const todoToMove = await this.repository.findOneBy({id, userId: user.id});
         
-        await this.repository.createQueryBuilder()
-        .update(Todo)
-        .set({id: previousTodo.id + 1})
-        .where('id = :id', { id: todoToMove.id })
-        .execute();
+        if(!todoToMove) {
+            throw new NotFoundException(`id: ${id} not found.`);
+        }
+
+        const previousTodo = prevId ? await this.repository.findOneBy({id: prevId, userId: user.id}) : null;
+        const nextTodo = nextId ? await this.repository.findOneBy({id: nextId, userId: user.id}) : null;
+
+        if(prevId && !previousTodo) throw new NotFoundException(`prevId: ${prevId} not found.`);
+        if(nextId && !nextTodo) throw new NotFoundException(`nextId: ${nextId} not found.`);
+
+        // handle most top item order
+        if(nextTodo && !previousTodo) {
+            // Check nextTodo is the most top item
+            const minOrder: number | null = await this.repository
+            .minimum('order', {userId: user.id})
+
+            if(minOrder !== nextTodo.order) throw new NotAcceptableException(`nextId: ${nextId} is not the most top item`);
+
+            todoToMove.order = nextTodo.order / 2;
+
+            await this.repository.update(todoToMove.id, todoToMove);
+            return todoToMove;
+        }
+
+        // handle most bottom item order
+        if(!nextTodo && previousTodo) {
+            // Check previousTodo is the most bottom item
+            const maxOrder: number | null = await this.repository
+            .maximum('order', {userId: user.id})
+
+            if(maxOrder !== previousTodo.order) throw new NotAcceptableException(`prevId: ${prevId} is not the most bottom item`);
+
+            todoToMove.order = previousTodo.order + 100;
+
+            await this.repository.update(todoToMove.id, todoToMove);
+            return todoToMove;
+        }
+
+        const getAverage = (previousTodo.order + nextTodo.order) / 2;
+        todoToMove.order = getAverage;
+
+        await this.repository.update(todoToMove.id, {order: getAverage})
+        return todoToMove;
     }
 }

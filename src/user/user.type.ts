@@ -1,16 +1,7 @@
-import { Todo } from 'src/todos/todo.entity';
-import { Field, ObjectType } from '@nestjs/graphql';
-import { ID } from 'type-graphql';
-import { TodoType } from 'src/todos/todo.type';
+import { ObjectType, Field } from "@nestjs/graphql";
 
-@ObjectType('User')
-export class UserType {
-    @Field(() => ID)
-    id: number;
-    
-    @Field()
-    email: string;
-    
-    @Field(() => [TodoType])
-    todos: Todo[];
+@ObjectType()
+export class AccessToken {
+  @Field()
+  accessToken: string;
 }

@@ -1,21 +1,25 @@
 import { Args, Mutation, Query, Resolver } from "@nestjs/graphql";
-import { UserType } from "./user.type";
-import { AuthGuard } from "@nestjs/passport";
-import { UseGuards } from "@nestjs/common";
-import { GqlAuthGuard } from "./guard/gql-auth.guard";
 import { UserService } from "./user.service";
-import { CreateUserInput } from "./input/create-user.input";
+import { CreateUserInput } from "./dto/create-user.input";
+import { User } from "./user.entity";
+import { AccessToken } from "./user.type";
 
-@Resolver(() => UserType)
+@Resolver(of => User)
 export class UserResolver {
     constructor(private userService: UserService) {}
 
-    @Mutation(() => UserType)
-    createUser(@Args('email') email: string) {
-        return {
-            id: 1,
-            email: 'asdf',
-            todos: []
-        }
+    @Mutation(returns => AccessToken)
+    createUser(@Args('data') createUserInput: CreateUserInput): Promise<AccessToken> {
+      return this.userService.createUser(createUserInput);
+    }
+
+    @Query(returns => AccessToken)
+    authenticate(@Args('data') createUserInput: CreateUserInput): Promise<AccessToken> {
+      return this.userService.getAuthenticated(createUserInput);
+    }
+
+    @Query(retunrs => [User])
+    getUsers(): Promise<User[]> {
+      return this.userService.getUsers();
     }
 }

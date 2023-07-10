@@ -1,10 +1,10 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AuthCredentialDto } from './dto/auth-credential.dto';
 import { User } from './user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-import { CreateUserInput } from './input/create-user.input';
+import { CreateUserInput } from './dto/create-user.input';
+import { AccessToken } from './user.type';
 
 @Injectable()
 export class UserService {
@@ -14,8 +14,8 @@ export class UserService {
         private readonly jwtService: JwtService
     ) {}
     
-    async getAuthenticated(authCredentialDto: AuthCredentialDto) {
-        const { email } = authCredentialDto;
+    async getAuthenticated(getUserEmail: CreateUserInput): Promise<AccessToken> {
+        const { email } = getUserEmail;
         const existUser = await this.repository.findOneBy({email})
 
         if(!existUser) {
@@ -28,12 +28,16 @@ export class UserService {
         return {accessToken};
     }
     
-    async createUser(email: string) {
+    async createUser(createUserInput: CreateUserInput): Promise<AccessToken> {
         try {
+            const { email } = createUserInput;
             const user = new User();
             user.email = email;
+            await user.save();
 
-            return user.save();
+            const payload = {email};
+            const accessToken = await this.jwtService.signAsync(payload);
+            return {accessToken}
 
         } catch (error) {
             if(error.code === 'ER_DUP_ENTRY') {
@@ -43,5 +47,9 @@ export class UserService {
             throw new InternalServerErrorException();
         }
 
+    }
+
+    async getUsers(): Promise<User[]> {
+        return this.repository.find();
     }
 }
