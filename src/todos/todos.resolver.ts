@@ -3,7 +3,7 @@ import { Todo } from "./todo.entity";
 import { TodosService } from "./todos.service";
 import { GetTodosPayload } from "./todos.type";
 import { UseGuards } from "@nestjs/common";
-import { GqlAuthGuard } from "src/user/guard/gql-auth.guard";
+import { GqlAuthGuard } from "src/shared/gql-auth.guard";
 import { User } from "src/user/user.entity";
 import { CreateTodoInput } from "./dto/create-todo.input";
 import { UpdateTodoInput } from "./dto/update-todo.input";

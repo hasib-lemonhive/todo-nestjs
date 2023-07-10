@@ -15,7 +15,7 @@ import { UserResolver } from './user.resolver';
     JwtModule.register({
     secret: 'my-secret',
     signOptions: {
-      expiresIn: '10h'
+      expiresIn: '7d'
     }
   }), 
   TypeOrmModule.forFeature([User])
