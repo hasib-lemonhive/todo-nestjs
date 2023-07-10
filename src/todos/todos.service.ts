@@ -20,9 +20,11 @@ export class TodosService {
     }
 
     async getAllTodos(): Promise<Todo[]> {
-        return this.repository.createQueryBuilder('todo')
-        .orderBy('todo.order', 'ASC')
-        .getMany();
+        // return this.repository.createQueryBuilder('todo')
+        // .orderBy('todo.order', 'ASC')
+        // .getMany();
+        
+        return this.repository.find({order: {order: 'ASC'}})
     }
 
     async createTodo(createTodoInput: CreateTodoInput, user: User): Promise<Todo> {
