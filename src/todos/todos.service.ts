@@ -38,9 +38,7 @@ export class TodosService {
             todo.order = 100;
         }
 
-        await this.repository.save(todo);
-        delete todo.user;
-        return todo;
+        return this.repository.save(todo);
     }
 
     async updateTodo(updateTodoInput: UpdateTodoInput, user: User) {
@@ -50,7 +48,7 @@ export class TodosService {
         if(!foundTodo) {
             throw new NotFoundException(`No todo found by id:${id}`);
         }
-
+        
         Object.assign(foundTodo, {content: content});
         await this.repository.update(foundTodo.id, foundTodo);
         return foundTodo;
