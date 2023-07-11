@@ -18,7 +18,7 @@ const mockTodoService = () => ({
 
     updateTodoOrder: jest.fn(),
 
-    getAllTodos: jest.fn(),
+    getAllTodos: jest.fn().mockResolvedValue([{id: 1, content: 'dummy content', order: 2, userId: 3} as Todo]),
 
     getMyTodos: jest.fn()
 });
@@ -46,8 +46,7 @@ describe('Todo Resolver', () => {
 
     describe('getTodos', () => {
         it('return list of todos', async () => {
-            const mockTodos = [];
-            todoService.getAllTodos = jest.fn().mockResolvedValue(mockTodos);
+            const mockTodos = await todoService.getAllTodos();
             const result = await todoResolver.getTodos()
 
             expect(todoService.getAllTodos).toHaveBeenCalled();
