@@ -3,46 +3,86 @@ import { TodosService } from './todos.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Todo } from './todo.entity';
+import { User } from 'src/user/user.entity';
+import { CreateTodoInput } from './dto/create-todo.input';
 
-export type MockType<T> = {
-    [P in keyof T]?: jest.Mock<object>;
-};
+const mockRepository = () => ({
+    find: jest.fn(),
+    minimum: jest.fn(),
+    maximum: jest.fn(),
+    findOneBy: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    create: jest.fn(),
+    save: jest.fn()
+})
 
-export const repositoryMockFactory: () => MockType<Repository<any>> = jest.fn(() => ({
-    find: jest.fn(entity => entity),
-    createQueryBuilder: jest.fn(entity => entity),
-    minimum: jest.fn(entity => entity),
-    maximum: jest.fn(entity => entity),
-    findOneBy: jest.fn(entity => entity),
-    update: jest.fn(entity => entity),
-    delete: jest.fn(entity => entity),
-}));
-
+const mockUser: User = {email: 'test@mail.com', id: 1} as User; 
+const mockTodo: Todo = {id: 1, content: 'dummy content', order: 2, userId: 1, createdAt: new Date(), updatedAt: new Date()} as Todo;
 
 describe('Todo Service', () => {
-    let service: TodosService;
-    let repositoryMock: MockType<Repository<Todo>>
+    let todoService: TodosService;
+    let todoRepository: Repository<Todo>
 
     beforeEach(async () => {
-        const moduleRef = await Test.createTestingModule({
+        const moduleRef: TestingModule = await Test.createTestingModule({
             providers: [TodosService, {
                 provide: getRepositoryToken(Todo),
-                useFactory: repositoryMockFactory,
+                useFactory: mockRepository,
             }]
         }).compile();
 
-        service = moduleRef.get<TodosService>(TodosService);
-        repositoryMock = moduleRef.get(getRepositoryToken(Todo))
+        todoService = moduleRef.get<TodosService>(TodosService);
+        todoRepository = moduleRef.get<Repository<Todo>>(getRepositoryToken(Todo))
     })
 
-    it('should be defined', () => {
-        expect(service).toBeDefined();
+    describe('getAllTodos', () => {
+        it('Get all task from the repository', async () => {
+            todoRepository.find = jest.fn().mockResolvedValue([])
+            const result = await todoService.getAllTodos();
+
+            expect(todoRepository.find).toHaveBeenCalled();
+            expect(result).toEqual([]);
+        })
     })
 
-    it('getTodos', () => {
-        const todos = Promise.resolve([{id: 1, content: 'test content', order: 1}]);
-        repositoryMock.find.mockReturnValue(todos);
+    describe('getMyTodos', () => {
+        it('Get my all task from the repository', async () => {
+            const mockTodos: Todo[] = [];
+            todoRepository.find = jest.fn().mockResolvedValue(mockTodos)
 
-        expect(service.getAllTodos()).toEqual(todos);
+            const result = await todoService.getMyTodos(mockUser);
+
+            expect(todoRepository.find).toHaveBeenCalledWith({where: {userId: mockUser.id}, order: {order: 'ASC'}});
+            expect(result).toEqual(mockTodos);
+        })
     })
+
+    describe('createTodo', () => {
+        it('create a todo', async () => {
+            const mockedCreateTodoInput: CreateTodoInput = {content: 'dummy content'}
+            
+            todoRepository.create = jest.fn().mockResolvedValue(mockTodo);
+            const result = await todoService.createTodo(mockedCreateTodoInput, mockUser);
+
+            expect(todoRepository.create).toHaveBeenCalled();
+            expect(todoRepository.maximum).toBeCalledWith('order', {userId: mockUser.id});
+            expect(todoRepository.save).toHaveBeenCalled();
+            expect(result).toEqual(mockTodo)
+        })
+
+        it('create the first todo of a user', async () => {
+            const mockedCreateTodoInput: CreateTodoInput = {content: 'dummy content..'}
+            const TODO_FIRST_ORDER = 100;
+
+            todoRepository.create = jest.fn().mockResolvedValue(mockTodo);
+            todoRepository.maximum = jest.fn().mockResolvedValue(null);
+
+            const result = await todoService.createTodo(mockedCreateTodoInput, mockUser);
+            console.log(result);
+
+            expect(result.order).toEqual(TODO_FIRST_ORDER);
+        })
+    })
+
 })

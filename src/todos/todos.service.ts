@@ -19,17 +19,13 @@ export class TodosService {
         return this.repository.find({where: {userId: user.id}, order: {order: 'ASC'}});
     }
 
-    async getAllTodos(): Promise<Todo[]> {
-        // return this.repository.createQueryBuilder('todo')
-        // .orderBy('todo.order', 'ASC')
-        // .getMany();
-        
+    async getAllTodos(): Promise<Todo[]> {        
         return this.repository.find({order: {order: 'ASC'}})
     }
 
-    async createTodo(createTodoInput: CreateTodoInput, user: User): Promise<Todo> {
+    async createTodo(createTodoInput: CreateTodoInput, user: User): Promise<Todo> { 
         const { content } = createTodoInput;
-        const todo = new Todo();
+        const todo = this.repository.create();
         todo.content = content;
         todo.user = user;
 
@@ -42,7 +38,7 @@ export class TodosService {
             todo.order = 100;
         }
 
-        await todo.save();
+        await this.repository.save(todo);
         delete todo.user;
         return todo;
     }
