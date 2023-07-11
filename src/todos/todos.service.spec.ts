@@ -71,7 +71,7 @@ describe('Todo Service', () => {
             expect(result).toEqual(mockTodo)
         })
 
-        it('create the first todo of a user', async () => {
+        it('create the first todo of an user', async () => {
             const mockedCreateTodoInput: CreateTodoInput = {content: 'dummy content..'}
             const TODO_FIRST_ORDER = 100;
 
