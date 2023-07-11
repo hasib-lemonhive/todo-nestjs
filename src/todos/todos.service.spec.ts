@@ -168,15 +168,15 @@ describe('Todo Service', () => {
             expect(todoService.updateTodoOrder(mockUpdateTodoOrderInput, mockUser)).rejects.toThrow(NotFoundException);
         })
 
-        it('get most least order todo', async () => {
+        it('get the most least order todo', async () => {
             const MOST_LEAST_TODO_ORDER = 100;
             const mockUpdateTodoOrderInput: UpdateTodoOrderInput = {id: 1, nextId: 2, prevId: null};
 
             todoRepository.minimum = jest.fn().mockResolvedValue(MOST_LEAST_TODO_ORDER);
 
             jest.spyOn(todoRepository, 'findOneBy')
-            .mockResolvedValueOnce({...mockTodo, order: 400} as Todo)
-            .mockResolvedValueOnce({...mockTodo, id: 2} as Todo)
+            .mockResolvedValueOnce({...mockTodo, order: 400} as Todo) // todoToMove
+            .mockResolvedValueOnce({...mockTodo, id: 2} as Todo) // nextTodo
 
             const result = await todoService.updateTodoOrder(mockUpdateTodoOrderInput, mockUser);
 
@@ -184,20 +184,33 @@ describe('Todo Service', () => {
             expect(todoRepository.update).toHaveBeenCalledWith(mockTodo.id, {...mockTodo, order: result.order}) 
         })
 
-        it('get most highest order todo', async () => {
+        it('get the most highest order todo', async () => {
             const MOST_HIGHEST_TODO_ORDER = 900;
             const mockUpdateTodoOrderInput: UpdateTodoOrderInput = {id: 1, nextId: null, prevId: 3};
 
             todoRepository.maximum = jest.fn().mockResolvedValue(MOST_HIGHEST_TODO_ORDER);
 
             jest.spyOn(todoRepository, 'findOneBy')
-            .mockResolvedValueOnce({...mockTodo} as Todo)
-            .mockResolvedValueOnce({...mockTodo, order: 900, id: 3} as Todo)
+            .mockResolvedValueOnce({...mockTodo} as Todo) // todoToMove
+            .mockResolvedValueOnce({...mockTodo, order: 900, id: 3} as Todo) // preViousTodo
 
             const result = await todoService.updateTodoOrder(mockUpdateTodoOrderInput, mockUser);
 
             expect(todoRepository.maximum).toBeCalled()
             expect(todoRepository.update).toHaveBeenCalledWith(mockTodo.id, {...mockTodo, order: result.order}) 
+        })
+
+        it('place the selected todo between previous and next todo', async () => {
+            const mockUpdateTodoOrderInput:UpdateTodoOrderInput = {id: 1, nextId: 2, prevId: 3};
+
+            jest.spyOn(todoRepository, 'findOneBy')
+            .mockResolvedValueOnce({...mockTodo} as Todo)
+            .mockResolvedValueOnce({...mockTodo, id: 2, order: 200} as Todo)
+            .mockResolvedValueOnce({...mockTodo, id: 3, order: 400} as Todo);
+
+            const result = await todoService.updateTodoOrder(mockUpdateTodoOrderInput, mockUser)
+            
+            expect(todoRepository.update).toHaveBeenCalledWith(mockTodo.id, { order: result.order })
         })
     })
 
