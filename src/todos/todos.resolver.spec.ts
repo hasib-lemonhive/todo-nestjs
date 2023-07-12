@@ -12,9 +12,9 @@ import { UpdateTodoOrderInput } from './dto/update-todo-order.dto';
 const mockTodo: Todo = {id: 1, content: 'dummy content', order: 100, userId: 1, createdAt: new Date(), updatedAt: new Date()} as Todo;
 const mockUser: User = {email: 'test@mail.com', id: 1} as User; 
 
-const mockTodoService = () => ({
+const mockTodoService: ()=> Omit<TodosService, "repository"> = () => ({
     createTodo: jest.fn(),
-
+    
     deleteTodo: jest.fn(),
 
     updateTodo: jest.fn(),
