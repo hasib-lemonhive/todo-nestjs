@@ -54,7 +54,7 @@ export class TodosService {
         return foundTodo;
     }
 
-    async deleteTodo(deleteTodoInput: DeleteTodoInput, user: User) {
+    async deleteTodo(deleteTodoInput: DeleteTodoInput, user: User): Promise<boolean> {
         const { id } = deleteTodoInput;
         const deleteResult = await this.repository.delete({id, userId: user.id});
 

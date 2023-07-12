@@ -9,6 +9,7 @@ import { UpdateTodoInput } from './dto/update-todo.input';
 import { NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { DeleteTodoInput } from './dto/delete-doto.input';
 import { UpdateTodoOrderInput } from './dto/update-todo-order.dto';
+import { DeleteResult } from 'typeorm';
 
 const mockRepository = () => ({
     find: jest.fn(),
@@ -107,7 +108,7 @@ describe('Todo Service', () => {
         it('update todo with given input', async () => {
             const mockUpdateTodoInput: UpdateTodoInput = { content: 'updated content', id: mockTodo.id };
 
-            todoRepository.findOneBy = jest.fn().mockResolvedValue({...mockTodo});
+            jest.spyOn(todoRepository, 'findOneBy').mockResolvedValue({...mockTodo} as Todo);
             const result = await todoService.updateTodo(mockUpdateTodoInput, mockUser);
 
             expect(todoRepository.findOneBy).toHaveBeenCalledWith({id: mockTodo.id, userId: mockUser.id});
@@ -118,7 +119,7 @@ describe('Todo Service', () => {
         it('Throw error if given id not found', () => {
             const mockUpdateTodoInput: UpdateTodoInput = { content: 'updated content', id: mockTodo.id };
 
-            todoRepository.findOneBy = jest.fn().mockResolvedValue(null);
+            jest.spyOn(todoRepository, 'findOneBy').mockResolvedValue(null);
             expect(todoService.updateTodo(mockUpdateTodoInput, mockUser)).rejects.toThrow();
         })
 
@@ -128,7 +129,7 @@ describe('Todo Service', () => {
         it('delete todo by given id', async () => {
             const mockDeleteTodoInput: DeleteTodoInput = { id: 2};
 
-            todoRepository.delete = jest.fn().mockResolvedValue({affected: 1});
+            jest.spyOn(todoRepository, 'delete').mockResolvedValue({affected: 1} as DeleteResult);
             const result = await todoService.deleteTodo(mockDeleteTodoInput, mockUser);
 
             expect(result).toEqual(true);
@@ -136,8 +137,7 @@ describe('Todo Service', () => {
 
         it('return false if given id not found', async () => {
             const mockDeleteTodoInput: DeleteTodoInput = { id: 2};
-
-            todoRepository.delete = jest.fn().mockResolvedValue({affected: 0});
+            jest.spyOn(todoRepository, 'delete').mockResolvedValue({affected: 0} as DeleteResult);
             const result = await todoService.deleteTodo(mockDeleteTodoInput, mockUser);
 
             expect(result).toEqual(false);
@@ -153,7 +153,7 @@ describe('Todo Service', () => {
 
         it('throw error if todo is not found', async () => {
             const mockUpdateTodoOrderInput:UpdateTodoOrderInput = {id: 1, nextId: 2, prevId: 3};
-            todoRepository.findOneBy = jest.fn().mockResolvedValue(null)
+            jest.spyOn(todoRepository, 'findOneBy').mockResolvedValue(null);
 
             expect(todoService.updateTodoOrder(mockUpdateTodoOrderInput, mockUser)).rejects.toThrow(NotFoundException);
         })
@@ -172,8 +172,7 @@ describe('Todo Service', () => {
             const MOST_LEAST_TODO_ORDER = 100;
             const mockUpdateTodoOrderInput: UpdateTodoOrderInput = {id: 1, nextId: 2, prevId: null};
 
-            todoRepository.minimum = jest.fn().mockResolvedValue(MOST_LEAST_TODO_ORDER);
-
+            jest.spyOn(todoRepository, 'minimum').mockResolvedValue(MOST_LEAST_TODO_ORDER);
             jest.spyOn(todoRepository, 'findOneBy')
             .mockResolvedValueOnce({...mockTodo, order: 400} as Todo) // todoToMove
             .mockResolvedValueOnce({...mockTodo, id: 2} as Todo) // nextTodo
@@ -188,7 +187,7 @@ describe('Todo Service', () => {
             const MOST_HIGHEST_TODO_ORDER = 900;
             const mockUpdateTodoOrderInput: UpdateTodoOrderInput = {id: 1, nextId: null, prevId: 3};
 
-            todoRepository.maximum = jest.fn().mockResolvedValue(MOST_HIGHEST_TODO_ORDER);
+            jest.spyOn(todoRepository, 'maximum').mockResolvedValue(MOST_HIGHEST_TODO_ORDER);
 
             jest.spyOn(todoRepository, 'findOneBy')
             .mockResolvedValueOnce({...mockTodo} as Todo) // todoToMove
