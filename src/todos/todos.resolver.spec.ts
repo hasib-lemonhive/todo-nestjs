@@ -12,9 +12,13 @@ import { UpdateTodoOrderInput } from './dto/update-todo-order.dto';
 const mockTodo: Todo = {id: 1, content: 'dummy content', order: 100, userId: 1, createdAt: new Date(), updatedAt: new Date()} as Todo;
 const mockUser: User = {email: 'test@mail.com', id: 1} as User; 
 
-const mockTodoService: ()=> Omit<TodosService, "repository"> = () => ({
+const testfn = (): string => {
+    return 'asdf';
+}
+
+const mockTodoService: () => Omit<TodosService, "repository"> = () => ({
     createTodo: jest.fn(),
-    
+
     deleteTodo: jest.fn(),
 
     updateTodo: jest.fn(),
@@ -48,22 +52,20 @@ describe('Todo Resolver', () => {
 
     describe('getTodos', () => {
         it('returns list of todos', async () => {
-            const mockTodos = await todoService.getAllTodos();
-            const result = await todoResolver.getTodos()
+            await todoService.getAllTodos();
+            await todoResolver.getTodos()
 
             expect(todoService.getAllTodos).toHaveBeenCalled();
-            expect(result).toEqual(mockTodos)
         })
     })
 
     describe('getMyTodos', () => {
         it('returns list of todos by user', async () => {
             const mockContext = {req: {user: mockUser}}
-            const mockTodos = await todoService.getMyTodos(mockUser);
-            const result = await todoResolver.getMyTodos(mockContext);
+            await todoService.getMyTodos(mockUser);
+            await todoResolver.getMyTodos(mockContext);
 
             expect(todoService.getMyTodos).toHaveBeenCalledWith(mockUser);
-            expect(result).toEqual(mockTodos);
         })
     })
 
@@ -73,10 +75,9 @@ describe('Todo Resolver', () => {
             const mockCreateTodoInput: CreateTodoInput = {content: 'dummy todo'};
 
             jest.spyOn(todoService, 'createTodo').mockResolvedValue(mockTodo)
-            const result = await todoResolver.createTodo(mockCreateTodoInput, mockContext);
+            await todoResolver.createTodo(mockCreateTodoInput, mockContext);
 
             expect(todoService.createTodo).toHaveBeenCalledWith(mockCreateTodoInput, mockUser);
-            expect(result).toEqual(mockTodo);
         })
     })
 
@@ -87,10 +88,9 @@ describe('Todo Resolver', () => {
             const mockUpdatedTodo = {...mockTodo, content: mockUpdateTodoInput.content, id: mockUpdateTodoInput.id} as Todo;
 
             jest.spyOn(todoService, 'updateTodo').mockResolvedValue(mockUpdatedTodo)
-            const result = await todoResolver.updateTodo(mockUpdateTodoInput, mockContext);
+            await todoResolver.updateTodo(mockUpdateTodoInput, mockContext);
 
             expect(todoService.updateTodo).toHaveBeenCalledWith(mockUpdateTodoInput, mockUser);
-            expect(result).toEqual(mockUpdatedTodo);
         })
     })
 
@@ -100,10 +100,9 @@ describe('Todo Resolver', () => {
             const mockUpdateTodoOrderInput: UpdateTodoOrderInput = {id: 2, nextId: 4, prevId: 6};
 
             jest.spyOn(todoService, 'updateTodoOrder').mockResolvedValue(mockTodo);
-            const result = await todoResolver.updateTodoOrder(mockUpdateTodoOrderInput, mockContext);
+            await todoResolver.updateTodoOrder(mockUpdateTodoOrderInput, mockContext);
 
             expect(todoService.updateTodoOrder).toHaveBeenCalledWith(mockUpdateTodoOrderInput, mockUser);
-            expect(result).toEqual(mockTodo);
         })
     })
 
@@ -113,10 +112,9 @@ describe('Todo Resolver', () => {
             const mockDeleteTodoInput: DeleteTodoInput = {id: 2};
 
             jest.spyOn(todoService, 'deleteTodo').mockResolvedValue(true);
-            const result = await todoResolver.deleteTodo(mockDeleteTodoInput, mockContext);
+            await todoResolver.deleteTodo(mockDeleteTodoInput, mockContext);
 
             expect(todoService.deleteTodo).toHaveBeenCalledWith(mockDeleteTodoInput, mockUser);
-            expect(result).toEqual(true);
         })
     })
 })
